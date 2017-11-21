@@ -1,0 +1,7 @@
+function y = revertSort(x, o)
+    
+    y = complex(zeros(c, 1), 0);
+    for i = 1:c
+        y(o(i)) = x(i);
+    end
+end
