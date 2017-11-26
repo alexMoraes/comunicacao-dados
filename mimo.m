@@ -30,10 +30,10 @@ sentSignal = complex(sentBits * 2 - 1, 0);
 % Matriz de transferência do canal
 H = generateH(receptionAntennas, transmissionAntennas);
 
-for i = 1 : length(Eb_N0_lin)
+for i = 1 : 1%length(Eb_N0_lin)
     % Ruído (AWGN)
-    noise = NA(i) * complex(randn(1, nSimulatedBits), ...
-        randn(1, nSimulatedBits)) * sqrt(0.5) ...
+    noise = NA(i) * complex(randn(receptionAntennas, nSimulatedBits), ...
+        randn(receptionAntennas, nSimulatedBits)) * sqrt(0.5) ...
         * generateNoise;
     
     % Sinal recebido pelas antenas
