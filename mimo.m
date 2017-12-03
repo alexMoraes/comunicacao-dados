@@ -1,80 +1,78 @@
-close all;
 clear;
+close all;
+
 %-------------------------------------------------------------------------%
 %%% PARÂMETROS %%%
 
-generateNoise = 1;
-transmissionAntennas = 2;   % Número de antenas de transmissão
-receptionAntennas = 2;      % Número de antenas de recepção
-nSimulatedBits = 10000;     % Número de bits a serem simulados
+generateNoise = 0;
+NT = 2;                          	% Número de antenas de transmissão
+NR = 3;                         	% Número de antenas de recepção
+nBits = 100000;                   	% Número de bits por antena
+freqRegenH = 2;                    % a cada quantos bits transmitidos H é regenerada
 
 %-------------------------------------------------------------------------%
-Eb_N0_dB = 0:1:10;                  % Faixa de Eb/N0 a ser simulada (em dB)
-Eb_N0_lin = 10 .^ (Eb_N0_dB/10);    % Eb/N0 linearizado
-Eb = 1;                             % Energia por símbolo 
-NP = Eb ./ (Eb_N0_lin);             % Potência do ruído
-NA = sqrt(NP);                      % Amplitude do ruído
+
+Eb_N0_dB  = 0:1:10;                 % Faixa de Eb/N0 a ser simulada (em dB)
+Eb_N0_lin = 10 .^ (Eb_N0_dB/10); 	% Eb/N0 linearizado
+Eb        = 1;                      % Energia por símbolo 
+NP        = Eb ./ (Eb_N0_lin);      % Potência do ruído
+NA        = sqrt(NP);               % Amplitude do ruído
 
 % Matriz para BER de cada Eb/N0
-zfBER = zeros(1, length(Eb_N0_lin));
-ncBER = zeros(1, length(Eb_N0_lin));
-sncBER = zeros(1, length(Eb_N0_lin));
+ber_zf  = zeros(1, length(Eb_N0_lin));
+ber_nc  = zeros(1, length(Eb_N0_lin));
+ber_snc = zeros(1, length(Eb_N0_lin));
 
 %-------------------------------------------------------------------------%
-%%% SIMULAÇÃO %%%
 
-% Matriz de bits enviados por antena (linha == antena)
-sentBits = randi([0, 1], transmissionAntennas, nSimulatedBits);
-sentSignal = complex(sentBits * 2 - 1, 0);
+tic();
 
-% Matriz de transferência do canal
-H = generateH(receptionAntennas, transmissionAntennas);
+for j = 1 : length(Eb_N0_lin)
+    sentBits    = randi([0 1], [nBits * NT 1]);
+    sentSymbols = complex(sentBits * 2 - 1, 0);
 
-for i = 1 : 1%length(Eb_N0_lin)
-    % Ruído (AWGN)
-    noise = NA(i) * complex(randn(receptionAntennas, nSimulatedBits), ...
-        randn(receptionAntennas, nSimulatedBits)) * sqrt(0.5) ...
-        * generateNoise;
-    
-    % Sinal recebido pelas antenas
-    receivedSignal = H * sentSignal + noise;
-    
-    for bit = 1 : nSimulatedBits
-        % Regeneração periódica da matriz H
-        if mod(bit, 1000) == 0
-            H = generateH(receptionAntennas, transmissionAntennas);
+    err_zf  = 0;
+    err_nc  = 0;
+    err_snc = 0;
+    for i = 1 : nBits
+        b = sentBits((i - 1) * NT + 1 : i * NT);    % bits da rodada
+        x = sentSymbols((i - 1) * NT + 1 : i * NT); % símbolos da rodada
+
+        if mod(i, freqRegenH) == 1
+            [H, pinvH, Q, R, sortH, sortQ, sortR, I] = genH(NR, NT);
         end
-        
-        % Recepção do sinal - Zero forcing
-        zfSignal = zeroForcing(receivedSignal(:, bit), H);
-        zfBits = bpskToBits(zfSignal);
-        zfBER(i) = zfBER(i) + sum(sentBits(:, bit) ~= zfBits);
-        
-        % Recepção do sinal - Nulling and cancelling
-        ncSignal = nullingAndCancelling(receivedSignal(:, bit), H);
-        ncBits = bpskToBits(ncSignal);
-        ncBER(i) = ncBER(i) + sum(sentBits(:, bit) ~= ncBits);
-        
-        % Recepção do sinal - Sorted nulling and cancelling
-        sncSignal = sortedNullingAndCancelling(receivedSignal(:, bit), H);
-        sncBits = bpskToBits(sncSignal);
-        sncBER(i) = sncBER(i) + sum(sentBits(:, bit) ~= sncBits);
+
+        n = genNoise(NR, NA(j));
+        y = H * x + n;
+
+        % algoritmos nos receptores
+        x_zf  = zf(pinvH, y);
+        x_nc  = nc(Q, R, NT, y);
+        x_snc = snc(sortQ, sortR, I, NT, y);
+
+        % bits recebidos
+        b_zf  = (real(x_zf)  > 0) * 1;
+        b_nc  = (real(x_nc)  > 0) * 1;
+        b_snc = (real(x_snc) > 0) * 1;
+
+        % acumulador de erros
+        err_zf  = err_zf  + sum(b_zf  ~= b);
+        err_nc  = err_nc  + sum(b_nc  ~= b);
+        err_snc = err_snc + sum(b_snc ~= b);
     end
-    
-    zfBER(i) = zfBER(i) / (nSimulatedBits*transmissionAntennas);
-    ncBER(i) = ncBER(i) / (nSimulatedBits*transmissionAntennas);
-    sncBER(i) = sncBER(i) / (nSimulatedBits*transmissionAntennas);
+
+    tBits     = nBits * NT; % total de bits transmitidos
+    ber_zf(j)  = err_zf  / tBits;
+    ber_nc(j)  = err_nc  / tBits;
+    ber_snc(j) = err_snc / tBits;
+
 end
 
-semilogy(Eb_N0_dB, zfBER, ...
-    Eb_N0_dB, ncBER, ...
-    Eb_N0_dB, sncBER, 'LineWidth', 2);
+toc();
+
+semilogy(Eb_N0_dB, ber_zf, Eb_N0_dB, ber_nc, Eb_N0_dB, ber_snc, 'LineWidth', 2);
 grid on;
 title('Taxa de erros para sistema MIMO com BPSK');
 legend('ZF', 'NC', 'SNC');
 ylabel('BER');
 xlabel('Eb/N0 (dB)');
-
-
-
-
