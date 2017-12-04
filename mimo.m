@@ -4,11 +4,10 @@ close all;
 %-------------------------------------------------------------------------%
 %%% PARÂMETROS %%%
 
-generateNoise = 0;
 NT = 2;                          	% Número de antenas de transmissão
 NR = 3;                         	% Número de antenas de recepção
-nBits = 100000;                   	% Número de bits por antena
-freqRegenH = 2;                    % a cada quantos bits transmitidos H é regenerada
+nBits = 1000000;                   	% Número de bits por antena
+freqRegenH = 10;                    % a cada quantos bits transmitidos H é regenerada
 
 %-------------------------------------------------------------------------%
 
@@ -61,7 +60,7 @@ for j = 1 : length(Eb_N0_lin)
         err_snc = err_snc + sum(b_snc ~= b);
     end
 
-    tBits     = nBits * NT; % total de bits transmitidos
+    tBits      = nBits * NT; % total de bits transmitidos
     ber_zf(j)  = err_zf  / tBits;
     ber_nc(j)  = err_nc  / tBits;
     ber_snc(j) = err_snc / tBits;
@@ -72,7 +71,7 @@ toc();
 
 semilogy(Eb_N0_dB, ber_zf, Eb_N0_dB, ber_nc, Eb_N0_dB, ber_snc, 'LineWidth', 2);
 grid on;
-title('Taxa de erros para sistema MIMO com BPSK');
+title(sprintf("Taxa de erros para sistema MIMO %dx%d com BPSK", NT, NR));
 legend('ZF', 'NC', 'SNC');
 ylabel('BER');
 xlabel('Eb/N0 (dB)');
