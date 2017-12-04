@@ -1,4 +1,6 @@
 function [H, pinvH, Q, R, sortH, sortQ, sortR, I] = genH(NR, NT)
+    % gera uma matriz H e todas matrizes derivadas para a simulação
+    % de um sistema mimo
     H = complex(randn([NR NT]), randn([NR NT]));
     pinvH = pinv(H);
     [Q, R] = qr(H);

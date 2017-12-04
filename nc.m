@@ -1,4 +1,5 @@
 function x = nc(Q, R, NT, y)
+    % nulling and cancelling
     z = Q' * y; % = R*x + n
     
     x = zeros(NT, 1);

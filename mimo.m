@@ -4,10 +4,10 @@ close all;
 %-------------------------------------------------------------------------%
 %%% PARÂMETROS %%%
 
-NT = 2;                          	% Número de antenas de transmissão
-NR = 3;                         	% Número de antenas de recepção
-nBits = 1000000;                   	% Número de bits por antena
-freqRegenH = 10;                    % a cada quantos bits transmitidos H é regenerada
+NT = 4;                          	% Número de antenas de transmissão
+NR = 4;                         	% Número de antenas de recepção
+nBits = 500000;                   	% Número de bits por antena
+freqRegenH = 2;                     % a cada quantos bits transmitidos H é regenerada
 
 %-------------------------------------------------------------------------%
 
@@ -17,7 +17,7 @@ Eb        = 1;                      % Energia por símbolo
 NP        = Eb ./ (Eb_N0_lin);      % Potência do ruído
 NA        = sqrt(NP);               % Amplitude do ruído
 
-% Matriz para BER de cada Eb/N0
+% Vetor para BER de cada Eb/N0
 ber_zf  = zeros(1, length(Eb_N0_lin));
 ber_nc  = zeros(1, length(Eb_N0_lin));
 ber_snc = zeros(1, length(Eb_N0_lin));
@@ -27,12 +27,14 @@ ber_snc = zeros(1, length(Eb_N0_lin));
 tic();
 
 for j = 1 : length(Eb_N0_lin)
+    % bits e símbolos a serem simulados por cada antena para este Eb/N0
     sentBits    = randi([0 1], [nBits * NT 1]);
     sentSymbols = complex(sentBits * 2 - 1, 0);
 
     err_zf  = 0;
     err_nc  = 0;
     err_snc = 0;
+    % envio de 1 bit por antena
     for i = 1 : nBits
         b = sentBits((i - 1) * NT + 1 : i * NT);    % bits da rodada
         x = sentSymbols((i - 1) * NT + 1 : i * NT); % símbolos da rodada
