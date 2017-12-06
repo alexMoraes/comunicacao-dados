@@ -4,13 +4,14 @@ close all;
 %-------------------------------------------------------------------------%
 %%% PARÂMETROS %%%
 
-NT = 4;                          	% Número de antenas de transmissão
-NR = 4;                         	% Número de antenas de recepção
+NT = 2;                          	% Número de antenas de transmissão
+NR = 2;                         	% Número de antenas de recepção
 
 simulatedBits = 2000000;            % Número total de bits transmitidos
 nBits = ceil(simulatedBits/NT);     % Número de bits transmitidos por antena
 
-freqRegenH = 4;                     % A cada quantos bits transmitidos H é regenerada
+freqRegenH = 3;                     % A cada quantos bits transmitidos
+                                    % por antena H é regenerada
 
 %-------------------------------------------------------------------------%
 
@@ -41,15 +42,13 @@ for j = 1 : length(Eb_N0_lin)
     err_nc  = 0;
     err_snc = 0;
     
-    bitCount = 0; % controle de bits enviados para regeneração de H
-    
     % transmissão e recepção dos bits
     for i = 1 : nBits
         b = sentBits((i - 1) * NT + 1 : i * NT);    % bits da rodada
         x = sentSymbols((i - 1) * NT + 1 : i * NT); % símbolos da rodada
 
         % regeneração da matriz H
-        if mod(bitCount, freqRegenH) == 0
+        if mod(i, freqRegenH) == 0
             [H, pinvH, Q, R, sortH, sortQ, sortR, I] = genH(NR, NT);
         end
 
@@ -71,7 +70,6 @@ for j = 1 : length(Eb_N0_lin)
         err_nc  = err_nc  + sum(b_nc  ~= b);
         err_snc = err_snc + sum(b_snc ~= b);
         
-        bitCount = bitCount + NT; % a cada round, são enviaods NT bits
     end
 
     tBits      = nBits * NT; % total de bits transmitidos
