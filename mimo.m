@@ -4,10 +4,10 @@ close all;
 %-------------------------------------------------------------------------%
 %%% PARÂMETROS %%%
 
-NT = 4;                          	% Número de antenas de transmissão
-NR = 4;                         	% Número de antenas de recepção
-nBits = 500000;                   	% Número de bits por antena
-freqRegenH = 2;                     % a cada quantos bits transmitidos H é regenerada
+NT = 2;                          	% Número de antenas de transmissão
+NR = 2;                         	% Número de antenas de recepção
+nBits = 1000000;                   	% Número de bits por antena
+freqRegenH = 2;                     % a cada quantos NT*bits transmitidos H é regenerada
 
 %-------------------------------------------------------------------------%
 
@@ -70,6 +70,8 @@ for j = 1 : length(Eb_N0_lin)
 end
 
 toc();
+
+%ber_theoretical = 0.5*erfc(sqrt(Eb_N0_lin));
 
 semilogy(Eb_N0_dB, ber_zf, Eb_N0_dB, ber_nc, Eb_N0_dB, ber_snc, 'LineWidth', 2);
 grid on;
