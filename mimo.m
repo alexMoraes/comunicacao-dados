@@ -5,7 +5,7 @@ close all;
 %%% PARÂMETROS %%%
 
 NT = 2;                          	% Número de antenas de transmissão
-NR = 2;                         	% Número de antenas de recepção
+NR = 3;                         	% Número de antenas de recepção
 
 simulatedBits = 2000000;            % Número total de bits transmitidos
 nBits = ceil(simulatedBits/NT);     % Número de bits transmitidos por antena
